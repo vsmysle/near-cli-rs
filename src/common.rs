@@ -1630,6 +1630,24 @@ pub impl near_jsonrpc_client::JsonRpcClient {
             },
         })
     }
+
+    fn blocking_call_view_code(
+        &self,
+        account_id: &near_primitives::types::AccountId,
+        block_reference: near_primitives::types::BlockReference,
+    ) -> Result<
+        near_jsonrpc_primitives::types::query::RpcQueryResponse,
+        near_jsonrpc_client::errors::JsonRpcError<
+            near_jsonrpc_primitives::types::query::RpcQueryError,
+        >,
+    > {
+        self.blocking_call(near_jsonrpc_client::methods::query::RpcQueryRequest {
+            block_reference,
+            request: near_primitives::views::QueryRequest::ViewCode {
+                account_id: account_id.clone(),
+            },
+        })
+    }
 }
 
 use serde::de::{Deserialize, Deserializer};
@@ -1702,6 +1720,20 @@ pub impl near_jsonrpc_primitives::types::query::RpcQueryResponse {
             color_eyre::eyre::bail!(
                 "Internal error: Received unexpected query kind in response to a view-function query call",
             );
+        }
+    }
+
+    fn contract_code_view(
+        &self,
+    ) -> color_eyre::eyre::Result<near_primitives::views::ContractCodeView> {
+        if let near_jsonrpc_primitives::types::query::QueryResponseKind::ViewCode(result) =
+            &self.kind
+        {
+            Ok(result.clone())
+        } else {
+            color_eyre::eyre::bail!(
+                "Internal error: Received unexpected query kind in response to a View Contract Code query call",
+            )
         }
     }
 }
